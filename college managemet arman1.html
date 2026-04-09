@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College Management System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: Arial; background:#f2f2f2; margin:0; }
+        header { background:#2c3e50; color:white; padding:15px; text-align:center; }
+        nav { background:#34495e; padding:10px; text-align:center; display:none; }
+        nav button { padding:10px; margin:5px; border:none; background:#1abc9c; color:white; border-radius:5px; cursor:pointer; }
+        .container { padding:20px; }
+        .box { background:white; padding:20px; margin:20px auto; width:350px; border-radius:10px; box-shadow:0 0 10px gray; text-align:center; }
+        input { width:90%; padding:8px; margin:5px; }
+        ul { list-style:none; padding:0; }
+        li { background:#ecf0f1; margin:5px; padding:8px; border-radius:5px; }
+        .hidden { display:none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>College Management System</h1>
+</header>
+
+<div id="loginBox" class="box">
+    <h2>Admin Login</h2>
+    <input id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="error" style="color:red;"></p>
+</div>
+
+<nav id="menu">
+    <button onclick="show('dashboard')">Dashboard</button>
+    <button onclick="show('student')">Student</button>
+    <button onclick="show('fees')">Fees</button>
+    <button onclick="show('qr')">QR ID</button>
+    <button onclick="printReport()">Print</button>
+    <button onclick="logout()">Logout</button>
+</nav>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="box hidden">
+    <h2>Dashboard</h2>
+    <p>Total Students: <b id="totalStudents">0</b></p>
+    <p>Total Fees: <b id="totalFees">0</b></p>
+</div>
+
+<!-- STUDENT -->
+<div id="student" class="box hidden">
+    <h2>Student</h2>
+    <input id="studentName" placeholder="Student Name">
+    <button onclick="addItem('student')">Add</button>
+    <ul id="studentList"></ul>
+</div>
+
+<!-- FEES -->
+<div id="fees" class="box hidden">
+    <h2>Fees</h2>
+    <input id="feesName" placeholder="Enter amount (number)">
+    <button onclick="addItem('fees')">Add</button>
+    <ul id="feesList"></ul>
+</div>
+
+<!-- QR -->
+<div id="qr" class="box hidden">
+    <h2>QR Code ID</h2>
+    <input id="qrText" placeholder="Enter Student Name">
+    <button onclick="generateQR()">Generate QR</button>
+    <div id="qrcode"></div>
+</div>
+
+</div>
+
+<script>
+function login(){
+    if(username.value==='admin' && password.value==='1234'){
+        loginBox.style.display='none';
+        menu.style.display='block';
+        show('dashboard');
+        loadAll();
+    } else error.innerText='Invalid';
+}
+function logout(){ location.reload(); }
+
+function show(id){
+    ['dashboard','student','fees','qr'].forEach(m=>document.getElementById(m).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    updateDashboard();
+}
+
+function addItem(type){
+    let val=document.getElementById(type+'Name').value;
+    if(!val) return;
+    let data=JSON.parse(localStorage.getItem(type))||[];
+    data.push(val);
+    localStorage.setItem(type,JSON.stringify(data));
+    document.getElementById(type+'Name').value='';
+    load(type);
+    updateDashboard();
+}
+
+function load(type){
+    let list=document.getElementById(type+'List');
+    if(!list) return;
+    list.innerHTML='';
+    let data=JSON.parse(localStorage.getItem(type))||[];
+    data.forEach((item,i)=>{
+        let li=document.createElement('li');
+        li.innerHTML=item+" <button onclick='del("+JSON.stringify(type)+","+i+")'>X</button>";
+        list.appendChild(li);
+    });
+}
+
+function loadAll(){ ['student','fees'].forEach(load); updateDashboard(); }
+
+function del(type,i){
+    let data=JSON.parse(localStorage.getItem(type));
+    data.splice(i,1);
+    localStorage.setItem(type,JSON.stringify(data));
+    load(type); updateDashboard();
+}
+
+// DASHBOARD
+function updateDashboard(){
+    let students=(JSON.parse(localStorage.getItem('student'))||[]).length;
+    let feesArr=JSON.parse(localStorage.getItem('fees'))||[];
+    let totalFees=feesArr.reduce((sum,val)=>sum+parseInt(val||0),0);
+    document.getElementById('totalStudents').innerText=students;
+    document.getElementById('totalFees').innerText=totalFees;
+}
+
+// QR
+function generateQR(){
+    let text=document.getElementById('qrText').value;
+    document.getElementById('qrcode').innerHTML='';
+    new QRCode(document.getElementById('qrcode'), text);
+}
+
+// PRINT
+function printReport(){ window.print(); }
+</script>
+
+</body>
+</html>
